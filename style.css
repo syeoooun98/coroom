@@ -1,0 +1,392 @@
+:root {
+  --color-bg: #f5f6f8;
+  --color-border: #dde1e6;
+  --color-text: #222;
+  --color-muted: #888;
+  --color-primary: #2f6fed;
+  --color-primary-dark: #1d4fb8;
+  --color-danger: #e0433d;
+  --color-past: #eceef1;
+
+  --room-1: #4f8ef7;
+  --room-2: #35b0ab;
+  --room-3: #f2a72e;
+  --room-4: #a45ee5;
+  --room-5: #e2586a;
+  --room-6: #4caf50;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin: 0;
+}
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.nav-btn:hover {
+  background: #f0f2f5;
+}
+
+.today-btn {
+  font-weight: 600;
+}
+
+.date-label {
+  margin-left: 8px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.my-name-field {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.my-name-field label {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.my-name-field input {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 14px;
+  width: 140px;
+}
+
+main {
+  padding: 24px;
+}
+
+.status-message {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #fff3cd;
+  color: #7a5b00;
+  border: 1px solid #ffe08a;
+  font-size: 14px;
+}
+
+.grid-wrapper {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.reservation-grid {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 900px;
+  table-layout: fixed;
+}
+
+.reservation-grid th,
+.reservation-grid td {
+  border: 1px solid var(--color-border);
+  text-align: center;
+  vertical-align: middle;
+  padding: 0;
+  height: 40px;
+}
+
+.time-col {
+  width: 70px;
+  background: #fafbfc;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.time-cell {
+  font-size: 12px;
+  color: var(--color-muted);
+  background: #fafbfc;
+}
+
+.room-header {
+  padding: 8px 6px;
+  cursor: pointer;
+  position: relative;
+  background: #fafbfc;
+}
+
+.room-header .room-name {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.room-header .room-capacity {
+  font-size: 11px;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
+.room-header:hover {
+  background: #eef1f5;
+}
+
+.slot-cell {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.slot-cell.free:hover {
+  background: #e7f0ff;
+}
+
+.slot-cell.free:hover::after {
+  content: "예약하기";
+  font-size: 11px;
+  color: var(--color-primary);
+}
+
+.slot-cell.past {
+  background: var(--color-past);
+  color: #b5b9c0;
+  cursor: not-allowed;
+}
+
+.slot-cell.reserved {
+  cursor: pointer;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 4px 6px;
+}
+
+.slot-cell.reserved:hover {
+  filter: brightness(1.08);
+}
+
+.slot-cell.reserved .res-title {
+  font-weight: 700;
+  display: block;
+  word-break: break-word;
+}
+
+.slot-cell.reserved .res-name {
+  display: block;
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.room-color-1 { background: var(--room-1); }
+.room-color-2 { background: var(--room-2); }
+.room-color-3 { background: var(--room-3); }
+.room-color-4 { background: var(--room-4); }
+.room-color-5 { background: var(--room-5); }
+.room-color-6 { background: var(--room-6); }
+
+.legend {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--color-muted);
+  display: flex;
+  gap: 20px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--color-border);
+}
+
+.swatch-free { background: #fff; }
+.swatch-reserved { background: var(--color-primary); }
+.swatch-past { background: var(--color-past); }
+
+/* 회의실 정보 툴팁 */
+.room-tooltip {
+  position: absolute;
+  z-index: 50;
+  background: #2a2f38;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 220px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  pointer-events: none;
+}
+
+/* 모달 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px;
+  width: 380px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-small {
+  width: 320px;
+}
+
+.modal h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.form-row label {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.form-row input,
+.form-row select {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.static-value {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+.form-error {
+  color: var(--color-danger);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.btn-secondary {
+  background: #eee;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background: #ddd;
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #c22f2a;
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  row-gap: 8px;
+  column-gap: 12px;
+  margin: 0;
+}
+
+.detail-list dt {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.detail-list dd {
+  margin: 0;
+  font-size: 14px;
+}
+
+.identity-message {
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 8px 0 4px;
+}

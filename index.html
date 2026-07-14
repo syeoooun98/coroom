@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>coroom - 회의실 예약</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <h1 class="logo">coroom</h1>
+
+  <div class="date-nav">
+    <button id="prevDayBtn" class="nav-btn" title="이전 날짜">◀</button>
+    <button id="todayBtn" class="nav-btn today-btn">오늘</button>
+    <button id="nextDayBtn" class="nav-btn" title="다음 날짜">▶</button>
+    <span id="currentDateLabel" class="date-label"></span>
+  </div>
+
+  <div class="my-name-field">
+    <label for="myNameInput">내 이름</label>
+    <input type="text" id="myNameInput" placeholder="이름을 입력하세요" autocomplete="off" />
+  </div>
+</header>
+
+<main>
+  <div id="statusMessage" class="status-message" hidden></div>
+
+  <div class="grid-wrapper">
+    <table class="reservation-grid" id="reservationGrid">
+      <thead>
+        <tr id="gridHeaderRow">
+          <th class="time-col">시간</th>
+          <!-- 회의실 헤더는 JS로 채워짐 -->
+        </tr>
+      </thead>
+      <tbody id="gridBody">
+        <!-- 시간 행은 JS로 채워짐 -->
+      </tbody>
+    </table>
+  </div>
+
+  <p class="legend">
+    <span class="legend-item"><span class="swatch swatch-free"></span> 예약 가능</span>
+    <span class="legend-item"><span class="swatch swatch-reserved"></span> 예약됨</span>
+    <span class="legend-item"><span class="swatch swatch-past"></span> 지난 시간</span>
+  </p>
+</main>
+
+<!-- 회의실 정보 툴팁 -->
+<div id="roomTooltip" class="room-tooltip" hidden></div>
+
+<!-- 예약 생성 모달 -->
+<div id="createModal" class="modal-overlay" hidden>
+  <div class="modal">
+    <h2>회의실 예약</h2>
+    <form id="createForm">
+      <div class="form-row">
+        <label for="createRoomSelect">회의실</label>
+        <select id="createRoomSelect" required></select>
+      </div>
+
+      <div class="form-row">
+        <label>예약일자</label>
+        <span id="createDateLabel" class="static-value"></span>
+      </div>
+
+      <div class="form-row">
+        <label for="createStartTime">시작시간</label>
+        <select id="createStartTime" required></select>
+      </div>
+
+      <div class="form-row">
+        <label for="createEndTime">종료시간</label>
+        <select id="createEndTime" required></select>
+      </div>
+
+      <div class="form-row">
+        <label for="createReserverName">예약자 이름</label>
+        <input type="text" id="createReserverName" required />
+      </div>
+
+      <div class="form-row">
+        <label for="createDepartment">부서</label>
+        <input type="text" id="createDepartment" required />
+      </div>
+
+      <div class="form-row">
+        <label for="createTitle">회의 제목</label>
+        <input type="text" id="createTitle" required />
+      </div>
+
+      <p id="createModalError" class="form-error" hidden></p>
+
+      <div class="modal-actions">
+        <button type="button" id="createCancelBtn" class="btn btn-secondary">취소</button>
+        <button type="submit" id="createSubmitBtn" class="btn btn-primary">예약하기</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 예약 상세 모달 -->
+<div id="detailModal" class="modal-overlay" hidden>
+  <div class="modal">
+    <h2>예약 상세</h2>
+    <dl class="detail-list">
+      <dt>회의실</dt><dd id="detailRoomName"></dd>
+      <dt>예약자</dt><dd id="detailReserverName"></dd>
+      <dt>부서</dt><dd id="detailDepartment"></dd>
+      <dt>회의 제목</dt><dd id="detailTitle"></dd>
+      <dt>날짜</dt><dd id="detailDate"></dd>
+      <dt>시간</dt><dd id="detailTime"></dd>
+      <dt>상태</dt><dd id="detailStatus"></dd>
+    </dl>
+    <div class="modal-actions">
+      <button type="button" id="detailCloseBtn" class="btn btn-secondary">닫기</button>
+      <button type="button" id="detailCancelBtn" class="btn btn-danger">예약 취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 본인 확인 모달 (예/아니오) -->
+<div id="identityModal" class="modal-overlay" hidden>
+  <div class="modal modal-small">
+    <p id="identityModalMessage" class="identity-message"></p>
+    <div class="modal-actions">
+      <button type="button" id="identityYesBtn" class="btn btn-danger">예</button>
+      <button type="button" id="identityNoBtn" class="btn btn-secondary">아니오</button>
+    </div>
+  </div>
+</div>
+
+<!-- 안내 메시지 모달 -->
+<div id="messageModal" class="modal-overlay" hidden>
+  <div class="modal modal-small">
+    <p id="messageModalText" class="identity-message"></p>
+    <div class="modal-actions">
+      <button type="button" id="messageOkBtn" class="btn btn-primary">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase JS (UMD, CDN) -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
