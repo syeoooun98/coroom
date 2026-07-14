@@ -3,6 +3,8 @@
   'use strict';
 
   const MY_NAME_KEY = 'coroom_my_name';
+  const INSTALL_BANNER_DISMISSED_KEY = 'coroom_install_banner_dismissed_at';
+  const INSTALL_BANNER_DISMISS_DAYS = 7;
   const DAY_START_MIN = 9 * 60; // 09:00
   const DAY_END_MIN = 18 * 60; // 18:00
   const SLOT_MINUTES = 30;
@@ -33,6 +35,11 @@
     currentDateLabel: document.getElementById('currentDateLabel'),
     myNameInput: document.getElementById('myNameInput'),
     statusMessage: document.getElementById('statusMessage'),
+    offlineBanner: document.getElementById('offlineBanner'),
+    installBanner: document.getElementById('installBanner'),
+    installBannerText: document.getElementById('installBannerText'),
+    installBannerActionBtn: document.getElementById('installBannerActionBtn'),
+    installBannerCloseBtn: document.getElementById('installBannerCloseBtn'),
 
     gridHeaderRow: document.getElementById('gridHeaderRow'),
     gridBody: document.getElementById('gridBody'),
@@ -159,35 +166,82 @@
     setMyName(el.myNameInput.value.trim());
   });
 
-  // ---------- 데이터 로드 ----------
-  async function loadRooms() {
-    const { data, error } = await supabaseClient
-      .from('rooms')
-      .select('*')
-      .order('id', { ascending: true });
+  // ---------- 데이터 로드 (오프라인 시 마지막 데이터로 폴백하기 위한 localStorage 캐시) ----------
+  const CACHE_ROOMS_KEY = 'coroom_cache_rooms';
+  const CACHE_RESERVATIONS_PREFIX = 'coroom_cache_reservations_';
 
-    if (error) {
-      console.error(error);
-      showStatusMessage('회의실 정보를 불러오는 중 오류가 발생했습니다: ' + error.message);
+  function saveRoomsCache(rooms) {
+    try {
+      localStorage.setItem(CACHE_ROOMS_KEY, JSON.stringify(rooms));
+    } catch (e) {}
+  }
+
+  function loadRoomsCache() {
+    try {
+      const raw = localStorage.getItem(CACHE_ROOMS_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveReservationsCache(dateStr, reservations) {
+    try {
+      localStorage.setItem(CACHE_RESERVATIONS_PREFIX + dateStr, JSON.stringify(reservations));
+    } catch (e) {}
+  }
+
+  function loadReservationsCache(dateStr) {
+    try {
+      const raw = localStorage.getItem(CACHE_RESERVATIONS_PREFIX + dateStr);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function loadRooms() {
+    try {
+      const { data, error } = await supabaseClient
+        .from('rooms')
+        .select('*')
+        .order('id', { ascending: true });
+      if (error) throw error;
+      saveRoomsCache(data || []);
+      return data || [];
+    } catch (err) {
+      console.error(err);
+      const cached = loadRoomsCache();
+      if (cached) {
+        showStatusMessage('오프라인 상태입니다. 마지막으로 불러온 회의실 정보를 표시하고 있어요.');
+        return cached;
+      }
+      showStatusMessage('회의실 정보를 불러오는 중 오류가 발생했습니다.');
       return [];
     }
-    return data || [];
   }
 
   async function loadReservations(dateStr) {
-    const { data, error } = await supabaseClient
-      .from('reservations')
-      .select('*')
-      .eq('reservation_date', dateStr)
-      .eq('status', 'confirmed')
-      .order('start_time', { ascending: true });
-
-    if (error) {
-      console.error(error);
-      showStatusMessage('예약 정보를 불러오는 중 오류가 발생했습니다: ' + error.message);
+    try {
+      const { data, error } = await supabaseClient
+        .from('reservations')
+        .select('*')
+        .eq('reservation_date', dateStr)
+        .eq('status', 'confirmed')
+        .order('start_time', { ascending: true });
+      if (error) throw error;
+      saveReservationsCache(dateStr, data || []);
+      return data || [];
+    } catch (err) {
+      console.error(err);
+      const cached = loadReservationsCache(dateStr);
+      if (cached) {
+        showStatusMessage('오프라인 상태입니다. 마지막으로 불러온 예약 정보를 표시하고 있어요.');
+        return cached;
+      }
+      showStatusMessage('예약 정보를 불러오는 중 오류가 발생했습니다.');
       return [];
     }
-    return data || [];
   }
 
   async function refreshReservations() {
@@ -458,23 +512,44 @@
       return;
     }
 
+    if (!navigator.onLine) {
+      showCreateModalError('오프라인 상태에서는 예약을 할 수 없습니다. 인터넷 연결 후 다시 시도해주세요.');
+      return;
+    }
+
     el.createSubmitBtn.disabled = true;
 
-    const { error } = await supabaseClient.from('reservations').insert({
-      room_id: roomId,
-      reserver_name: reserverName,
-      department: department,
-      title: title,
-      reservation_date: formatDateISO(state.currentDate),
-      start_time: startTime + ':00',
-      end_time: endTime + ':00',
-    });
+    let result;
+    try {
+      result = await supabaseClient.from('reservations').insert({
+        room_id: roomId,
+        reserver_name: reserverName,
+        department: department,
+        title: title,
+        reservation_date: formatDateISO(state.currentDate),
+        start_time: startTime + ':00',
+        end_time: endTime + ':00',
+      });
+    } catch (err) {
+      el.createSubmitBtn.disabled = false;
+      console.error(err);
+      if (isLikelyNetworkError(err)) {
+        showCreateModalError('오프라인 상태에서는 예약을 할 수 없습니다. 인터넷 연결 후 다시 시도해주세요.');
+      } else {
+        showCreateModalError('예약 중 오류가 발생했습니다: ' + err.message);
+      }
+      return;
+    }
+
+    const { error } = result;
 
     el.createSubmitBtn.disabled = false;
 
     if (error) {
       console.error(error);
-      if (error.code === '23P01') {
+      if (isLikelyNetworkError(error)) {
+        showCreateModalError('오프라인 상태에서는 예약을 할 수 없습니다. 인터넷 연결 후 다시 시도해주세요.');
+      } else if (error.code === '23P01') {
         showCreateModalError('이미 예약된 시간대입니다. 다른 시간을 선택해주세요.');
       } else {
         showCreateModalError('예약 중 오류가 발생했습니다: ' + error.message);
@@ -524,14 +599,36 @@
   });
 
   async function cancelReservation(reservation) {
-    const { error } = await supabaseClient
-      .from('reservations')
-      .update({ status: 'cancelled' })
-      .eq('id', reservation.id);
+    if (!navigator.onLine) {
+      showMessageModal('오프라인 상태에서는 취소를 할 수 없습니다. 인터넷 연결 후 다시 시도해주세요.');
+      return;
+    }
+
+    let result;
+    try {
+      result = await supabaseClient
+        .from('reservations')
+        .update({ status: 'cancelled' })
+        .eq('id', reservation.id);
+    } catch (err) {
+      console.error(err);
+      if (isLikelyNetworkError(err)) {
+        showMessageModal('오프라인 상태에서는 취소를 할 수 없습니다. 인터넷 연결 후 다시 시도해주세요.');
+      } else {
+        showMessageModal('예약 취소 중 오류가 발생했습니다: ' + err.message);
+      }
+      return;
+    }
+
+    const { error } = result;
 
     if (error) {
       console.error(error);
-      showMessageModal('예약 취소 중 오류가 발생했습니다: ' + error.message);
+      if (isLikelyNetworkError(error)) {
+        showMessageModal('오프라인 상태에서는 취소를 할 수 없습니다. 인터넷 연결 후 다시 시도해주세요.');
+      } else {
+        showMessageModal('예약 취소 중 오류가 발생했습니다: ' + error.message);
+      }
       return;
     }
 
@@ -582,12 +679,149 @@
       .subscribe();
   }
 
+  // ---------- 서비스워커 등록 (PWA) ----------
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((err) => {
+        console.error('서비스워커 등록 실패:', err);
+      });
+    });
+  }
+
+  // ---------- 오프라인/온라인 상태 처리 ----------
+  function isLikelyNetworkError(err) {
+    if (!err) return false;
+    if (!navigator.onLine) return true;
+    const message = String(err.message || err).toLowerCase();
+    return (
+      err instanceof TypeError ||
+      message.includes('failed to fetch') ||
+      message.includes('networkerror') ||
+      message.includes('load failed') ||
+      message.includes('network request failed')
+    );
+  }
+
+  function showOfflineBanner() {
+    el.offlineBanner.hidden = false;
+  }
+
+  function hideOfflineBanner() {
+    el.offlineBanner.hidden = true;
+  }
+
+  function handleOnline() {
+    hideOfflineBanner();
+    // 온라인 복귀 시 최신 데이터로 다시 불러오기
+    refreshAllData();
+  }
+
+  function handleOffline() {
+    showOfflineBanner();
+  }
+
+  async function refreshAllData() {
+    state.rooms = await loadRooms();
+    await refreshReservations();
+  }
+
+  window.addEventListener('online', handleOnline);
+  window.addEventListener('offline', handleOffline);
+
+  // ---------- 홈 화면에 추가 배너 ----------
+  const IOS_INSTALL_TEXT = 'Safari 하단 공유 버튼을 누른 후 \'홈 화면에 추가\'를 선택하세요.';
+  const GENERIC_INSTALL_TEXT = 'coroom을 홈 화면에 추가하시겠어요?';
+
+  let deferredInstallPrompt = null;
+
+  function isStandalone() {
+    return (
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function isIosSafari() {
+    const ua = window.navigator.userAgent;
+    const isIos = /iphone|ipad|ipod/i.test(ua);
+    const isSafari = /safari/i.test(ua) && !/crios|fxios|edgios|chrome|android/i.test(ua);
+    return isIos && isSafari;
+  }
+
+  function installBannerDismissed() {
+    const dismissedAt = Number(localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY) || 0);
+    if (!dismissedAt) return false;
+    const daysPassed = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
+    return daysPassed < INSTALL_BANNER_DISMISS_DAYS;
+  }
+
+  function dismissInstallBanner() {
+    localStorage.setItem(INSTALL_BANNER_DISMISSED_KEY, String(Date.now()));
+    el.installBanner.hidden = true;
+  }
+
+  function isMobileWidth() {
+    return window.matchMedia('(max-width: 768px)').matches;
+  }
+
+  function maybeShowInstallBanner() {
+    if (isStandalone() || installBannerDismissed() || !isMobileWidth()) {
+      el.installBanner.hidden = true;
+      return;
+    }
+
+    if (deferredInstallPrompt) {
+      el.installBannerText.textContent = GENERIC_INSTALL_TEXT;
+      el.installBannerActionBtn.hidden = false;
+      el.installBanner.hidden = false;
+    } else if (isIosSafari()) {
+      el.installBannerText.textContent = IOS_INSTALL_TEXT;
+      el.installBannerActionBtn.hidden = true;
+      el.installBanner.hidden = false;
+    } else {
+      el.installBanner.hidden = true;
+    }
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    maybeShowInstallBanner();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    el.installBanner.hidden = true;
+  });
+
+  el.installBannerActionBtn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    el.installBanner.hidden = true;
+    deferredInstallPrompt.prompt();
+    try {
+      await deferredInstallPrompt.userChoice;
+    } catch (err) {
+      // 무시
+    }
+    deferredInstallPrompt = null;
+  });
+
+  el.installBannerCloseBtn.addEventListener('click', dismissInstallBanner);
+
+  window.addEventListener('resize', maybeShowInstallBanner);
+
   // ---------- 초기화 ----------
   async function init() {
     renderDateLabel();
+
+    if (!navigator.onLine) {
+      showOfflineBanner();
+    }
+
     state.rooms = await loadRooms();
     await refreshReservations();
     subscribeRealtime();
+    maybeShowInstallBanner();
 
     // 자정을 넘기거나 시간이 흘러 과거 슬롯 표시가 갱신되도록 1분마다 다시 그림
     setInterval(() => {

@@ -20,11 +20,69 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
+}
+
+/* ---------- 오프라인 배너 ---------- */
+.offline-banner {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  background: #7a5b00;
+  color: #fff3cd;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ---------- 홈 화면에 추가 배너 ---------- */
+.install-banner {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--color-primary-dark);
+  color: #fff;
+  font-size: 14px;
+}
+
+.install-banner-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.install-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-small {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.install-banner-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  min-width: 40px;
+  min-height: 40px;
 }
 
 .topbar {
@@ -55,6 +113,7 @@ body {
   background: #fff;
   border-radius: 6px;
   padding: 6px 12px;
+  min-height: 36px;
   cursor: pointer;
   font-size: 14px;
 }
@@ -89,7 +148,7 @@ body {
   padding: 6px 10px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
   width: 140px;
 }
 
@@ -109,6 +168,7 @@ main {
 
 .grid-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   background: #fff;
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -310,7 +370,7 @@ main {
   padding: 8px 10px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .static-value {
@@ -333,7 +393,8 @@ main {
 }
 
 .btn {
-  padding: 8px 16px;
+  padding: 10px 16px;
+  min-height: 40px;
   border-radius: 6px;
   border: none;
   font-size: 14px;
@@ -389,4 +450,78 @@ main {
   font-size: 15px;
   line-height: 1.5;
   margin: 8px 0 4px;
+}
+
+/* ---------- 모바일 대응 ---------- */
+@media (max-width: 768px) {
+  main {
+    padding: 16px;
+  }
+
+  .reservation-grid th,
+  .reservation-grid td {
+    height: 44px;
+  }
+
+  .room-header {
+    padding: 10px 6px;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  .modal {
+    width: 100%;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .logo {
+    flex: 1 0 auto;
+  }
+
+  .date-nav {
+    flex-wrap: wrap;
+    order: 3;
+    width: 100%;
+  }
+
+  .date-label {
+    margin-left: 0;
+    width: 100%;
+    order: 4;
+  }
+
+  .my-name-field {
+    margin-left: 0;
+    order: 2;
+  }
+
+  .my-name-field input {
+    width: 120px;
+  }
+
+  .nav-btn {
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+
+  .modal-actions {
+    flex-wrap: wrap;
+  }
+
+  .modal-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .install-banner {
+    flex-wrap: wrap;
+  }
 }

@@ -5,8 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>coroom - 회의실 예약</title>
 <link rel="stylesheet" href="style.css" />
+
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#233a5c" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="icon" href="icons/favicon.ico" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="coroom" />
 </head>
 <body>
+
+<div id="offlineBanner" class="offline-banner" hidden>
+  오프라인 상태입니다. 마지막으로 불러온 정보를 표시하고 있어요.
+</div>
+
+<div id="installBanner" class="install-banner" hidden>
+  <span id="installBannerText" class="install-banner-text"></span>
+  <div class="install-banner-actions">
+    <button type="button" id="installBannerActionBtn" class="btn btn-primary btn-small" hidden>추가</button>
+    <button type="button" id="installBannerCloseBtn" class="install-banner-close" aria-label="닫기">×</button>
+  </div>
+</div>
 
 <header class="topbar">
   <h1 class="logo">coroom</h1>
